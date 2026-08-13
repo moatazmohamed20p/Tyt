@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>رادار الأرقام — تحقق من أرقام الهواتف</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0A0B0E;
+    --panel: #15171C;
+    --panel-2: #1B1E25;
+    --border: #262933;
+    --gold: #C9A46A;
+    --gold-bright: #E8C888;
+    --text: #ECEAE4;
+    --muted: #888D97;
+    --success: #5FBF8F;
+    --error: #E2665C;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'Cairo', sans-serif;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html{ scroll-behavior:smooth; }
+  body{
+    background: radial-gradient(120% 90% at 50% -10%, #17191f 0%, #0A0B0E 55%), var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height:100vh;
+    padding: 48px 20px 80px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+  ::selection{ background: var(--gold); color:#0A0B0E; }
+
+  /* ---------- Header ---------- */
+  .brand{
+    display:flex; align-items:center; gap:12px;
+    margin-bottom: 6px;
+  }
+  .brand-mark{
+    width:34px; height:34px; border-radius:50%;
+    border:1.5px solid var(--gold);
+    display:flex; align-items:center; justify-content:center;
+    position:relative;
+    flex-shrink:0;
+  }
+  .brand-mark::before{
+    content:'';
+    width:6px; height:6px; border-radius:50%;
+    background: var(--gold-bright);
+    box-shadow: 0 0 8px 1px var(--gold-bright);
+  }
+  .brand h1{
+    font-size: 20px; font-weight:800; letter-spacing:0.5px;
+  }
+  .brand span{ color: var(--gold); }
+  .tagline{
+    color: var(--muted); font-size:14px; margin-bottom:44px; text-align:center;
+    max-width: 420px; line-height:1.9;
+  }
+
+  /* ---------- Radar / Hero ---------- */
+  .radar-wrap{
+    position:relative;
+    width: 216px; height:216px;
+    display:flex; align-items:center; justify-content:center;
+    margin-bottom: 28px;
+  }
+  .ring{
+    position:absolute; border-radius:50%;
+    border:1px solid var(--border);
+  }
+  .ring.r1{ width:100%; height:100%; }
+  .ring.r2{ width:70%; height:70%; }
+  .ring.r3{ width:40%; height:40%; }
+  .radar-wrap.scanning .ring{ border-color: rgba(201,164,106,0.28); }
+  .sweep{
+    position:absolute; width:100%; height:100%; border-radius:50%;
+    background: conic-gradient(from 0deg, rgba(201,164,106,0.55), transparent 28%);
+    opacity:0;
+    animation: none;
+  }
+  .radar-wrap.scanning .sweep{
+    opacity:1;
+    animation: spin 1.6s linear infinite;
+  }
+  @keyframes spin{ to{ transform: rotate(360deg); } }
+  .radar-core{
+    position:relative; z-index:2;
+    width: 84px; height:84px; border-radius:50%;
+    background: var(--panel);
+    border:1px solid var(--border);
+    display:flex; align-items:center; justify-content:center;
+    transition: border-color .3s ease, box-shadow .3s ease;
+  }
+  .radar-core svg{ width:32px; height:32px; stroke: var(--gold); }
+  .radar-wrap.valid .radar-core{ border-color: var(--success); box-shadow: 0 0 24px -4px rgba(95,191,143,0.5); }
+  .radar-wrap.invalid .radar-core{ border-color: var(--error); box-shadow: 0 0 24px -4px rgba(226,102,92,0.5); }
+  .radar-wrap.valid .radar-core svg{ stroke: var(--success); }
+  .radar-wrap.invalid .radar-core svg{ stroke: var(--error); }
+  .pulse-dot{
+    position:absolute; width:6px; height:6px; border-radius:50%;
+    background: var(--gold-bright); opacity:0;
+  }
+  .radar-wrap.scanning .pulse-dot{
+    animation: pulseOut 1.6s ease-out infinite;
+  }
+  @keyframes pulseOut{
+    0%{ transform: scale(0.3); opacity:0.9; }
+    80%{ opacity:0; }
+    100%{ transform: scale(3.4); opacity:0; }
+  }
+
+  /* ---------- Input card ---------- */
+  .card{
+    width:100%; max-width: 440px;
+    background: var(--panel);
+    border:1px solid var(--border);
+    border-radius: 18px;
+    padding: 22px;
+  }
+  .field-label{
+    font-size:12px; color:var(--muted); margin-bottom:8px; display:block; font-weight:600;
+  }
+  .dialer{
+    display:flex; gap:8px; margin-bottom:14px;
+  }
+  .dialer input[type=text]{
+    flex:1; min-width:0;
+  }
+  input, select{
+    background: var(--panel-2);
+    border:1px solid var(--border);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size:16px;
+    border-radius: 10px;
+    padding: 13px 14px;
+    outline:none;
+    transition: border-color .2s ease;
+    direction: ltr;
+    text-align: left;
+  }
+  .cc-input{ width:88px; text-align:center; font-family: var(--mono); }
+  input:focus, select:focus{ border-color: var(--gold); }
+  input::placeholder{ color:#5A5E68; }
+
+  .go-btn{
+    width:100%;
+    background: linear-gradient(180deg, var(--gold-bright), var(--gold));
+    color:#141109;
+    border:none; border-radius:10px;
+    font-family: var(--sans); font-weight:700; font-size:15px;
+    padding: 13px;
+    cursor:pointer;
+    transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+    box-shadow: 0 6px 20px -6px rgba(201,164,106,0.5);
+  }
+  .go-btn:hover{ transform: translateY(-1px); box-shadow: 0 8px 24px -6px rgba(201,164,106,0.65); }
+  .go-btn:active{ transform: translateY(0); }
+  .go-btn:disabled{ opacity:0.55; cursor:not-allowed; transform:none; }
+
+  .hint{ font-size:12px; color:var(--muted); margin-top:10px; text-align:center; line-height:1.8; }
+  .hint b{ color: var(--gold); font-weight:600; }
+
+  /* ---------- Settings (API key) ---------- */
+  .settings-toggle{
+    background:none; border:none; color:var(--muted);
+    font-family: var(--sans); font-size:13px; cursor:pointer;
+    display:flex; align-items:center; gap:6px; margin: 18px 0 4px;
+    padding: 4px 2px;
+  }
+  .settings-toggle:hover{ color: var(--gold); }
+  .settings-panel{
+    width:100%; max-width:440px;
+    overflow:hidden;
+    max-height:0;
+    transition: max-height .3s ease;
+  }
+  .settings-panel.open{ max-height:140px; }
+  .settings-inner{
+    background: var(--panel);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:16px; margin-top:8px;
+  }
+  .key-row{ display:flex; gap:8px; }
+  .key-row input{ flex:1; font-size:13px; }
+  .key-status{ font-size:11px; margin-top:8px; color:var(--muted); }
+  .key-status.saved{ color: var(--success); }
+
+  /* ---------- Result ---------- */
+  .result{
+    width:100%; max-width:440px;
+    margin-top:22px;
+    opacity:0; transform: translateY(-8px);
+    transition: opacity .35s ease, transform .35s ease;
+    pointer-events:none;
+  }
+  .result.show{ opacity:1; transform:none; pointer-events:auto; }
+
+  .status-line{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:14px;
+  }
+  .status-badge{
+    font-size:12px; font-weight:700; padding:5px 12px; border-radius:999px;
+    border:1px solid var(--success); color: var(--success);
+  }
+  .status-badge.invalid{ border-color: var(--error); color: var(--error); }
+  .intl-number{
+    font-family: var(--mono); font-size:19px; letter-spacing:0.5px; direction:ltr;
+  }
+
+  .grid{
+    display:grid; grid-template-columns: 1fr 1fr; gap:10px;
+  }
+  .tile{
+    background: var(--panel);
+    border:1px solid var(--border);
+    border-radius: 12px;
+    padding: 13px 14px;
+  }
+  .tile-label{ font-size:11px; color:var(--muted); margin-bottom:5px; }
+  .tile-value{ font-size:14px; font-weight:600; }
+  .tile-value.mono{ font-family: var(--mono); direction:ltr; text-align:right; }
+  .tile.full{ grid-column: 1 / -1; }
+
+  .error-box{
+    background: var(--panel);
+    border:1px solid var(--error);
+    border-radius:12px;
+    padding:14px 16px;
+    font-size:13px; color:#F0A8A2; line-height:1.8;
+  }
+
+  footer{
+    margin-top:56px; color:#4B4F58; font-size:12px; text-align:center; line-height:1.9;
+  }
+  footer a{ color: var(--gold); text-decoration:none; }
+
+  @media (max-width:480px){
+    .grid{ grid-template-columns:1fr; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .sweep, .pulse-dot{ animation:none !important; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="brand">
+    <div class="brand-mark"></div>
+    <h1>رادار <span>الأرقام</span></h1>
+  </div>
+  <p class="tagline">اكتب أي رقم هاتف من أي دولة، والرادار هيقولك هو حقيقي ولا لأ، وتابع لمين، ونوعه.</p>
+
+  <div class="radar-wrap" id="radarWrap">
+    <div class="ring r1"></div>
+    <div class="ring r2"></div>
+    <div class="ring r3"></div>
+    <div class="sweep"></div>
+    <div class="pulse-dot"></div>
+    <div class="radar-core">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+      </svg>
+    </div>
+  </div>
+
+  <div class="card">
+    <label class="field-label">رقم الهاتف</label>
+    <div class="dialer">
+      <input type="text" id="ccInput" class="cc-input" placeholder="EG" maxlength="2" value="EG">
+      <input type="text" id="numberInput" placeholder="مثال: 01001234567 أو 14158586273">
+    </div>
+    <button class="go-btn" id="checkBtn">فحص الرقم</button>
+    <p class="hint">ابدأ بكود الدولة (زي <b>EG</b> أو <b>US</b>) لو الرقم مكتوب محلي، أو سيب الخانة فاضية لو هتكتب الرقم بصيغته الدولية كاملة بعلامة +.</p>
+  </div>
+
+  <div class="result" id="result"></div>
+
+  <footer>
+    بيانات التحقق من <a href="https://numverify.com" target="_blank" rel="noopener">Numverify API</a> عن طريق <b style="color:var(--gold)">proxy.php</b>.<br>
+    المفتاح متخزن في متغير بيئة على السيرفر (NUMVERIFY_KEY) — مش ظاهر في الفرونت خالص.
+  </footer>
+
+<script>
+  const radarWrap = document.getElementById('radarWrap');
+  const checkBtn = document.getElementById('checkBtn');
+  const ccInput = document.getElementById('ccInput');
+  const numberInput = document.getElementById('numberInput');
+  const resultEl = document.getElementById('result');
+
+  function escapeHtml(str){
+    return String(str).replace(/[&<>"']/g, s => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    }[s]));
+  }
+
+  function showError(msg){
+    radarWrap.classList.remove('scanning','valid');
+    radarWrap.classList.add('invalid');
+    resultEl.innerHTML = `<div class="error-box">${escapeHtml(msg)}</div>`;
+    resultEl.classList.add('show');
+  }
+
+  function renderResult(data){
+    radarWrap.classList.remove('scanning');
+    if(data.valid){
+      radarWrap.classList.add('valid');
+      radarWrap.classList.remove('invalid');
+    } else {
+      radarWrap.classList.add('invalid');
+      radarWrap.classList.remove('valid');
+    }
+
+    const badgeClass = data.valid ? '' : 'invalid';
+    const badgeText = data.valid ? 'رقم صحيح' : 'رقم غير صحيح';
+
+    resultEl.innerHTML = `
+      <div class="status-line">
+        <span class="intl-number">${escapeHtml(data.international_format || data.number || '—')}</span>
+        <span class="status-badge ${badgeClass}">${badgeText}</span>
+      </div>
+      <div class="grid">
+        <div class="tile"><div class="tile-label">الدولة</div><div class="tile-value">${escapeHtml(data.country_name || '—')}</div></div>
+        <div class="tile"><div class="tile-label">رمز الدولة</div><div class="tile-value mono">${escapeHtml(data.country_prefix || '—')} (${escapeHtml(data.country_code || '—')})</div></div>
+        <div class="tile"><div class="tile-label">الموقع</div><div class="tile-value">${escapeHtml(data.location || 'غير متاح')}</div></div>
+        <div class="tile"><div class="tile-label">نوع الخط</div><div class="tile-value">${escapeHtml(data.line_type || 'غير معروف')}</div></div>
+        <div class="tile"><div class="tile-label">الشركة الناقلة</div><div class="tile-value">${escapeHtml(data.carrier || 'غير متاحة')}</div></div>
+        <div class="tile"><div class="tile-label">الصيغة المحلية</div><div class="tile-value mono">${escapeHtml(data.local_format || '—')}</div></div>
+      </div>
+    `;
+    resultEl.classList.add('show');
+  }
+
+  async function checkNumber(){
+    const number = numberInput.value.trim();
+    const cc = ccInput.value.trim();
+
+    if(!number){
+      showError('اكتب رقم الهاتف الأول.');
+      return;
+    }
+
+    checkBtn.disabled = true;
+    radarWrap.classList.remove('valid','invalid');
+    radarWrap.classList.add('scanning');
+    resultEl.classList.remove('show');
+
+    const params = new URLSearchParams({ number });
+    if(cc) params.set('country_code', cc);
+
+    // بيبعت الطلب لـ proxy.php بدل ما يكلم Numverify مباشرة من المتصفح.
+    // كده تتفادى مشكلة Mixed Content (HTTPS بيطلب من HTTP) والمفتاح
+    // بيفضل مخبي في السيرفر. لو حابب تكلم Numverify مباشرة بدل البروكسي
+    // بدّل السطر ده بـ: `http://apilayer.net/api/validate?${params}`
+    const url = `proxy.php?${params.toString()}`;
+
+    try{
+      const res = await fetch(url);
+      const data = await res.json();
+
+      if(data.success === false){
+        showError(`خطأ من الـ API (${data.error?.code || '؟'}): ${data.error?.info || data.error?.type || 'حصل خطأ غير معروف'}`);
+        return;
+      }
+      renderResult(data);
+    } catch(err){
+      showError('فشل الاتصال بـ proxy.php. تأكد إنه شغّال على نفس السيرفر ومتغير NUMVERIFY_KEY متحدد.');
+    } finally {
+      checkBtn.disabled = false;
+    }
+  }
+
+  checkBtn.addEventListener('click', checkNumber);
+  numberInput.addEventListener('keydown', e => { if(e.key === 'Enter') checkNumber(); });
+</script>
+</body>
+</html>
